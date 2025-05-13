@@ -133,4 +133,5 @@ def delete_review(call):
 
 # Запускаем keep_alive, чтобы поддерживать активность бота
 keep_alive()
+bot.remove_webhook()
 bot.polling(none_stop=True)
