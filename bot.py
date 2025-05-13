@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-
+from keep_alive import keep_alive
 
 bot = telebot.TeleBot('7648138016:AAE3vHdvJdDmd9AYanTcAp_uva481SI3DSY')  # Замените на свой токен
 ADMIN_ID = 5263048623  # Замените на ваш ID
@@ -131,6 +131,6 @@ def delete_review(call):
         else:
             bot.send_message(call.message.chat.id, "Отзыв не найден.")
 
-    # Запускаем keep_alive, чтобы поддерживать активность бота
-
+# Запускаем keep_alive, чтобы поддерживать активность бота
+keep_alive()
 bot.polling(none_stop=True)
