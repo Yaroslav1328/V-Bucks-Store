@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-from keep_alive import keep_alive  # Добавлено для работы с UptimeRobot
+from keep_alive import keep_alive
 
 bot = telebot.TeleBot('7648138016:AAE3vHdvJdDmd9AYanTcAp_uva481SI3DSY')  # Замените на свой токен
 ADMIN_ID = 5263048623  # Замените на ваш ID
@@ -26,24 +26,21 @@ prices = {
 
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("Старт", "Отзывы")  # Всегда вверху
+    markup.add("Отзывы")
     for item in prices:
         markup.add(item)
+    markup.add("Отправить скрин оплаты")
     return markup
 
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(message.chat.id, "Привет! Выбери количество V-Bucks, а также ты можешь посмотреть отзывы.", reply_markup=main_menu())
 
-@bot.message_handler(func=lambda m: m.text == "Старт")
-def restart(message):
-    start(message)
-
 @bot.message_handler(func=lambda m: m.text in prices)
 def handle_selection(message):
     amount = message.text
     price = prices[amount]
-    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата на номер: +7 929 582 13 15\nПосле оплаты просто пришлите скриншот оплаты в чат.")
+    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата на номер: +7 929 582 13 15\nПосле оплаты нажмите кнопку 'Отправить скрин оплаты'.")
 
 @bot.message_handler(content_types=['photo'])
 def handle_payment_photo(message):
@@ -97,30 +94,43 @@ def confirm_delivery(call):
     user_id = int(call.data.split("_")[1])
     if call.from_user.id != user_id:
         return
-
     bot.send_message(user_id, "Спасибо за покупку! Пожалуйста, оставьте свой отзыв.")
     user_states[user_id] = "awaiting_feedback"
 
 @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) == "awaiting_feedback")
 def save_feedback(message):
-    feedbacks[message.from_user.id] = {
-        "username": message.from_user.username or "Без ника",
-        "text": message.text
-    }
-    bot.send_message(message.chat.id, "Спасибо за отзыв!")
-    user_states[message.from_user.id] = None
+        feedbacks[message.from_user.id] = {
+            "username": message.from_user.username or "Без ника",
+            "text": message.text
+        }
+        bot.send_message(message.chat.id, "Спасибо за отзыв!")
+        user_states[message.from_user.id] = None
 
 @bot.message_handler(func=lambda m: m.text == "Отзывы")
 def show_reviews(message):
-    if not feedbacks:
-        bot.send_message(message.chat.id, "Пока нет отзывов.")
-        return
+        if not feedbacks:
+            bot.send_message(message.chat.id, "Пока нет отзывов.")
+            return
 
-    text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
-    bot.send_message(message.chat.id, text)
+        text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
+        bot.send_message(message.chat.id, text)
 
-# Запускаем keep_alive, чтобы бот не засыпал
+        if message.from_user.id == ADMIN_ID:
+            markup = types.InlineKeyboardMarkup()
+            for uid, f in feedbacks.items():
+                markup.add(types.InlineKeyboardButton(f"Удалить отзыв от @{f['username']}", callback_data=f"del_{uid}"))
+            bot.send_message(message.chat.id, "Удаление отзывов:", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("del_"))
+def delete_review(call):
+        if call.from_user.id != ADMIN_ID:
+            return
+        user_id = int(call.data.split("_")[1])
+        if feedbacks.pop(user_id, None):
+            bot.send_message(call.message.chat.id, "Отзыв удалён.")
+        else:
+            bot.send_message(call.message.chat.id, "Отзыв не найден.")
+
+# Запускаем keep_alive, чтобы поддерживать активность бота
 keep_alive()
-
-# Запуск бота
 bot.polling(none_stop=True)
