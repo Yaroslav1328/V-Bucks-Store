@@ -99,38 +99,38 @@ def confirm_delivery(call):
 
 @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) == "awaiting_feedback")
 def save_feedback(message):
-        feedbacks[message.from_user.id] = {
-            "username": message.from_user.username or "Без ника",
-            "text": message.text
-        }
-        bot.send_message(message.chat.id, "Спасибо за отзыв!")
-        user_states[message.from_user.id] = None
+            feedbacks[message.from_user.id] = {
+                "username": message.from_user.username or "Без ника",
+                "text": message.text
+            }
+            bot.send_message(message.chat.id, "Спасибо за отзыв!")
+            user_states[message.from_user.id] = None
 
 @bot.message_handler(func=lambda m: m.text == "Отзывы")
 def show_reviews(message):
-        if not feedbacks:
-            bot.send_message(message.chat.id, "Пока нет отзывов.")
-            return
+            if not feedbacks:
+                bot.send_message(message.chat.id, "Пока нет отзывов.")
+                return
 
-        text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
-        bot.send_message(message.chat.id, text)
+            text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
+            bot.send_message(message.chat.id, text)
 
-        if message.from_user.id == ADMIN_ID:
-            markup = types.InlineKeyboardMarkup()
-            for uid, f in feedbacks.items():
-                markup.add(types.InlineKeyboardButton(f"Удалить отзыв от @{f['username']}", callback_data=f"del_{uid}"))
-            bot.send_message(message.chat.id, "Удаление отзывов:", reply_markup=markup)
+            if message.from_user.id == ADMIN_ID:
+                markup = types.InlineKeyboardMarkup()
+                for uid, f in feedbacks.items():
+                    markup.add(types.InlineKeyboardButton(f"Удалить отзыв от @{f['username']}", callback_data=f"del_{uid}"))
+                bot.send_message(message.chat.id, "Удаление отзывов:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("del_"))
 def delete_review(call):
-        if call.from_user.id != ADMIN_ID:
-            return
-        user_id = int(call.data.split("_")[1])
-        if feedbacks.pop(user_id, None):
-            bot.send_message(call.message.chat.id, "Отзыв удалён.")
-        else:
-            bot.send_message(call.message.chat.id, "Отзыв не найден.")
+            if call.from_user.id != ADMIN_ID:
+                return
+            user_id = int(call.data.split("_")[1])
+            if feedbacks.pop(user_id, None):
+                bot.send_message(call.message.chat.id, "Отзыв удалён.")
+            else:
+                bot.send_message(call.message.chat.id, "Отзыв не найден.")
 
-# Запускаем keep_alive, чтобы поддерживать активность бота
+    # Запускаем keep_alive, чтобы поддерживать активность бота
 keep_alive()
-bot.polling(none_stop=True)
+bot.polling(none_stop=True)  # используем polling, без webhook
