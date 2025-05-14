@@ -26,10 +26,9 @@ prices = {
 
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("Отзывы")
+    markup.add("/start", "Отзывы")  # /start — первая
     for item in prices:
         markup.add(item)
-    markup.add("Отправить скрин оплаты")
     return markup
 
 @bot.message_handler(commands=['start'])
