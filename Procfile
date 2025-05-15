@@ -1,1 +1,1 @@
-web: gunicorn keep_alive:app
+worker: python bot.py
