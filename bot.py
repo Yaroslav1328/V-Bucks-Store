@@ -8,20 +8,21 @@ feedbacks = {}
 user_states = {}
 
 prices = {
-    "1000 V-Bucks": 625,
-    "2000 V-Bucks": 1250,
+    "1000 V-Bucks": 600,
+    "2000 V-Bucks": 1100,
     "2800 V-Bucks": 1400,
     "3000 V-Bucks": 1800,
     "3800 V-Bucks": 2000,
+    "4000 V-Bucks": 2200,
     "5000 V-Bucks": 2500,
-    "6000 V-Bucks": 3500,
-    "7000 V-Bucks": 4500,
+    "6000 V-Bucks": 3200,
+    "7000 V-Bucks": 4300,
     "7800 V-Bucks": 4650,
-    "13 500 V-Bucks": 5600,
-    "27 000 V-Bucks": 11000,
-    "40 500 V-Bucks": 16000,
-    "54 000 V-Bucks": 25000,
-    "108 000 V-Bucks": 50000
+    "13500 V-Bucks": 5600,
+    "27000 V-Bucks": 11000,
+    "40500 V-Bucks": 16000,
+    "54000 V-Bucks": 25000,
+    "108000 V-Bucks": 50000
 }
 
 def main_menu():
