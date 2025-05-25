@@ -40,7 +40,7 @@ def start(message):
 def handle_selection(message):
     amount = message.text
     price = prices[amount]
-    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата на номер: +7 929 582 13 15\nПосле оплаты нажмите кнопку 'Отправить скрин оплаты'.")
+    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата оплата по номеру карты: 2200700536853491\nПосле оплаты нажмите кнопку 'Отправить скрин оплаты'.")
 
 @bot.message_handler(content_types=['photo'])
 def handle_payment_photo(message):
