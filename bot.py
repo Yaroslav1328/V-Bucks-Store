@@ -1,18 +1,13 @@
 import telebot
 from telebot import types
 from keep_alive import keep_alive
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-
-TOKEN = os.getenv("TELEGRAM_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
-
-bot = telebot.TeleBot(TOKEN)
-
+bot = telebot.TeleBot('7648138016:AAEPCtTfBdHmPI1NTVAnkpSQ5aTg_E1gZdw')  # Замените на свой токен
+ADMIN_ID = 5263048623  # Замените на ваш ID
 feedbacks = {}
 user_states = {}
+
+prices = {
     "1000 V-Bucks": 600,
     "2000 V-Bucks": 1100,
     "2800 V-Bucks": 1400,
