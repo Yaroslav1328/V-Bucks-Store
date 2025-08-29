@@ -97,7 +97,6 @@ def receive_user_code(message):
 def send_confirm_button(call):
     if call.from_user.id != ADMIN_ID:
         return
-
     user_id = int(call.data.split("_")[1])
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Подтвердить выполнение заказа ✅", callback_data=f"confirm_{user_id}"))
