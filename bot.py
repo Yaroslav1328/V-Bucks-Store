@@ -1,11 +1,25 @@
 import telebot
 from telebot import types
 from keep_alive import keep_alive
+import json
 
-bot = telebot.TeleBot('7648138016:AAG-pj30k5uJt-vUl-nHrWE4r7xKTzcHKb0')# Замените на свой токен
+bot = telebot.TeleBot('7648138016:AAG-pj30k5uJt-vUl-nHrWE4r7xKTzcHKb0')  # Замените на свой токен
 ADMIN_ID = 5263048623  # Замените на ваш ID
-feedbacks = {}
 user_states = {}
+
+FEEDBACK_FILE = "feedbacks.json"
+
+# Загрузка отзывов при старте бота
+try:
+    with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+        feedbacks = json.load(f)
+except FileNotFoundError:
+    feedbacks = {}
+
+# Функция сохранения отзывов
+def save_feedbacks_to_file():
+    with open(FEEDBACK_FILE, "w", encoding="utf-8") as f:
+        json.dump(feedbacks, f, ensure_ascii=False, indent=4)
 
 prices = {
     "1000 V-Bucks": 600,
@@ -41,20 +55,20 @@ prices = {
 
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("/start", "Отзывы")  # /start — первая
+    markup.add("/start", "Отзывы")
     for item in prices:
         markup.add(item)
     return markup
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "Привет! Выбери количество V-Bucks, а также ты можешь посмотреть отзывы.", reply_markup=main_menu())
+    bot.send_message(message.chat.id, "Привет! Выбери количество V-Bucks или посмотри отзывы.", reply_markup=main_menu())
 
 @bot.message_handler(func=lambda m: m.text in prices)
 def handle_selection(message):
     amount = message.text
     price = prices[amount]
-    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата оплата по номеру карты: 2200700536853491\nПосле, отправьте скрин оплаты.")
+    bot.send_message(message.chat.id, f"{amount} стоит {price}₽.\nОплата по номеру карты: 2200700536853491\nПосле, отправьте скрин оплаты.")
 
 @bot.message_handler(content_types=['photo'])
 def handle_payment_photo(message):
@@ -77,7 +91,6 @@ def handle_credentials(message):
 def request_code_from_user(call):
     if call.from_user.id != ADMIN_ID:
         return
-
     user_id = int(call.data.split("_")[2])
     bot.send_message(user_id, "Вам пришёл запрос: введите 6-значный код, который пришёл на почту.")
     user_states[user_id] = "waiting_code"
@@ -112,38 +125,53 @@ def confirm_delivery(call):
 
 @bot.message_handler(func=lambda m: user_states.get(m.from_user.id) == "awaiting_feedback")
 def save_feedback(message):
-            feedbacks[message.from_user.id] = {
-                "username": message.from_user.username or "Без ника",
-                "text": message.text
-            }
-            bot.send_message(message.chat.id, "Спасибо за отзыв!")
-            user_states[message.from_user.id] = None
+    feedbacks[str(message.from_user.id)] = {
+        "username": message.from_user.username or "Без ника",
+        "text": message.text
+    }
+    save_feedbacks_to_file()
+    bot.send_message(message.chat.id, "Спасибо за отзыв!")
+    user_states[message.from_user.id] = None
 
+# Кнопка "Отзывы" с возможностью написать отзыв
 @bot.message_handler(func=lambda m: m.text == "Отзывы")
 def show_reviews(message):
-            if not feedbacks:
-                bot.send_message(message.chat.id, "Пока нет отзывов.")
-                return
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("📝 Написать отзыв", callback_data=f"write_feedback_{message.from_user.id}"))
 
-            text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
-            bot.send_message(message.chat.id, text)
+    if not feedbacks:
+        bot.send_message(message.chat.id, "Пока нет отзывов.", reply_markup=markup)
+    else:
+        text = "\n\n".join([f"От @{f['username']}:\n{f['text']}" for f in feedbacks.values()])
+        bot.send_message(message.chat.id, text, reply_markup=markup)
 
-            if message.from_user.id == ADMIN_ID:
-                markup = types.InlineKeyboardMarkup()
-                for uid, f in feedbacks.items():
-                    markup.add(types.InlineKeyboardButton(f"Удалить отзыв от @{f['username']}", callback_data=f"del_{uid}"))
-                bot.send_message(message.chat.id, "Удаление отзывов:", reply_markup=markup)
+    # Если админ — кнопки для удаления отзывов
+    if message.from_user.id == ADMIN_ID:
+        admin_markup = types.InlineKeyboardMarkup()
+        for uid, f in feedbacks.items():
+            admin_markup.add(types.InlineKeyboardButton(f"Удалить отзыв от @{f['username']}", callback_data=f"del_{uid}"))
+        bot.send_message(message.chat.id, "Удаление отзывов:", reply_markup=admin_markup)
+
+# Нажатие кнопки "Написать отзыв"
+@bot.callback_query_handler(func=lambda call: call.data.startswith("write_feedback_"))
+def write_feedback(call):
+    user_id = int(call.data.split("_")[2])
+    if call.from_user.id != user_id:
+        return
+    bot.send_message(user_id, "Пожалуйста, напишите свой отзыв:")
+    user_states[user_id] = "awaiting_feedback"
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith("del_"))
 def delete_review(call):
-            if call.from_user.id != ADMIN_ID:
-                return
-            user_id = int(call.data.split("_")[1])
-            if feedbacks.pop(user_id, None):
-                bot.send_message(call.message.chat.id, "Отзыв удалён.")
-            else:
-                bot.send_message(call.message.chat.id, "Отзыв не найден.")
+    if call.from_user.id != ADMIN_ID:
+        return
+    user_id = call.data.split("_")[1]
+    if feedbacks.pop(user_id, None):
+        save_feedbacks_to_file()
+        bot.send_message(call.message.chat.id, "Отзыв удалён.")
+    else:
+        bot.send_message(call.message.chat.id, "Отзыв не найден.")
 
-    # Запускаем keep_alive, чтобы поддерживать активность бота
+# Запуск keep_alive
 keep_alive()
-bot.polling(none_stop=True)  # используем polling, без webhook
+bot.polling(none_stop=True)
