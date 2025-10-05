@@ -3,7 +3,7 @@ from telebot import types
 from keep_alive import keep_alive
 import json
 
-bot = telebot.TeleBot('7648138016:AAG-pj30k5uJt-vUl-nHrWE4r7xKTzcHKb0')  # Замените на свой токен
+bot = telebot.TeleBot('7648138016:AAEiFWonFA_E9_qhIGCOPE3xb-KptvxVfko')  # Замените на свой токен
 ADMIN_ID = 5263048623  # Замените на ваш ID
 user_states = {}
 
