@@ -3,8 +3,8 @@ from telebot import types
 from keep_alive import keep_alive
 import json
 
-bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
-ADMIN_ID = int(os.environ['ADMIN_ID'])
+bot = telebot.TeleBot('7648138016:AAEiFWonFA_E9_qhIGCOPE3xb-KptvxVfko')
+ADMIN_ID = 5263048623
 user_states = {}
 
 FEEDBACK_FILE = "feedbacks.json"
